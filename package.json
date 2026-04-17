@@ -10,10 +10,11 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "schema:gen": "drizzle-kit generate",
-    "schema:push": "drizzle-kit push",
+    "schema:migrate": "drizzle-kit migrate",
     "fmt": "prettier --write ."
   },
   "dependencies": {
+    "better-auth": "^1.6.5",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.3",

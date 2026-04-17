@@ -5,6 +5,9 @@ import { useForm, getFormProps, getInputProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { createBlog } from '@/app/actions/blog';
 import { blogFormSchema } from '@/app/actions/blog-schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export function BlogForm() {
   const [lastResult, action, isPending] = useActionState(createBlog, undefined);
@@ -24,30 +27,18 @@ export function BlogForm() {
       action={action}
       className="flex max-w-md flex-col gap-3"
     >
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor={fields.title.id}
-          className="text-sm font-medium text-neutral-700"
-        >
-          タイトル
-        </label>
-        <input
-          className="rounded border border-neutral-300 px-2 py-1.5 text-sm"
-          {...getInputProps(fields.title, { type: 'text' })}
-        />
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={fields.title.id}>タイトル</Label>
+        <Input {...getInputProps(fields.title, { type: 'text' })} />
         {fields.title.errors?.map(e => (
-          <p key={e} className="text-sm text-red-600">
+          <p key={e} className="text-sm text-destructive">
             {e}
           </p>
         ))}
       </div>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-fit rounded bg-neutral-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isPending} className="w-fit">
         {isPending ? '送信中…' : '登録'}
-      </button>
+      </Button>
     </form>
   );
 }

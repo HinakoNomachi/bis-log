@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { BlogTitleList } from '@/app/data/blog-title-list';
+import { BlogTitleList } from './blog-title-list';
 import {
   Card,
   CardContent,

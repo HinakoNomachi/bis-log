@@ -3,8 +3,8 @@
 import { useActionState } from 'react';
 import { useForm, getFormProps, getInputProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
-import { createBlog } from '@/app/actions/blog';
-import { blogFormSchema } from '@/app/actions/blog-schema';
+import { createBlog } from '@/actions/blog';
+import { blogFormSchema } from '@/actions/blog-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

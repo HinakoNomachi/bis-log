@@ -1,4 +1,4 @@
-import { getBlogTitles } from './blog-titles';
+import { getBlogTitles } from '@/data/blog-titles';
 
 export async function BlogTitleList() {
   const rows = await getBlogTitles();

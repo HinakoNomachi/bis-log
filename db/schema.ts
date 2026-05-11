@@ -9,10 +9,23 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const blogsTable = pgTable('blogs', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  title: varchar({ length: 255 }).notNull(),
-});
+export const blogsTable = pgTable(
+  'blogs',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    title: varchar({ length: 255 }).notNull(),
+    body: text('body').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  table => [index('blogs_userId_idx').on(table.userId)]
+);
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -89,6 +102,14 @@ export const verification = pgTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  blogs: many(blogsTable),
+}));
+
+export const blogsRelations = relations(blogsTable, ({ one }) => ({
+  author: one(user, {
+    fields: [blogsTable.userId],
+    references: [user.id],
+  }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

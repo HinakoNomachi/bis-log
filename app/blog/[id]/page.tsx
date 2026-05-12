@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import { notFound, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { auth } from '@/auth';
 import { getBlogById } from '@/data/blogs';
 
 export default async function BlogDetailPage({
@@ -9,6 +11,10 @@ export default async function BlogDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    redirect('/');
+  }
   const { id } = await params;
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) {

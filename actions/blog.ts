@@ -18,15 +18,22 @@ export async function createBlog(
   if (submission.status !== 'success') {
     return submission.reply();
   }
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
-    return submission.reply({ formErrors: ['ログインが必要です'] });
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return submission.reply({ formErrors: ['ログインが必要です'] });
+    }
+    await db.insert(blogsTable).values({
+      title: submission.value.title,
+      body: submission.value.body,
+      userId: session.user.id,
+    });
+  } catch (error) {
+    console.error('createBlog failed:', error);
+    return submission.reply({
+      formErrors: ['登録に失敗しました。時間をおいて再度お試しください'],
+    });
   }
-  await db.insert(blogsTable).values({
-    title: submission.value.title,
-    body: submission.value.body,
-    userId: session.user.id,
-  });
   revalidatePath('/top');
   redirect('/top');
 }

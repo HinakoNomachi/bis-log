@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers';
 import { parseWithZod } from '@conform-to/zod/v4';
-import type { SubmissionResult } from '@conform-to/dom';
+import type { SubmissionResult } from '@conform-to/react';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';

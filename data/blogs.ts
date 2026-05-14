@@ -9,6 +9,7 @@ export async function listBlogs() {
     .select({
       id: blogsTable.id,
       title: blogsTable.title,
+      userId: blogsTable.userId,
       createdAt: blogsTable.createdAt,
       authorName: user.name,
     })

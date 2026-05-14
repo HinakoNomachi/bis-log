@@ -78,3 +78,26 @@ export async function updateBlog(
   revalidatePath(`/blog/${id}`);
   redirect(`/blog/${id}`);
 }
+
+export async function deleteBlog(id: number): Promise<void> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    throw new Error('ログインが必要です');
+  }
+  try {
+    const result = await db
+      .delete(blogsTable)
+      .where(
+        and(eq(blogsTable.id, id), eq(blogsTable.userId, session.user.id))
+      )
+      .returning({ id: blogsTable.id });
+    if (result.length === 0) {
+      throw new Error('削除権限がないか、対象が見つかりませんでした');
+    }
+  } catch (error) {
+    console.error('deleteBlog failed:', error);
+    throw error;
+  }
+  revalidatePath('/top');
+  redirect('/top');
+}

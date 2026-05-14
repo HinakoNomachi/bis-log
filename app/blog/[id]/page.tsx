@@ -3,9 +3,11 @@ import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Pencil } from 'lucide-react';
 import { auth } from '@/auth';
 import { getBlogById } from '@/data/blogs';
 import { Button } from '@/components/ui/button';
+import { DeleteBlogButton } from '../delete-blog-button';
 
 export default async function BlogDetailPage({
   params,
@@ -40,14 +42,18 @@ export default async function BlogDetailPage({
             {blog.title}
           </h1>
           {blog.userId === session.user.id && (
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={<Link href={`/blog/${blog.id}/edit`} />}
-            >
-              編集
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon-sm"
+                nativeButton={false}
+                aria-label="編集"
+                render={<Link href={`/blog/${blog.id}/edit?from=detail`} />}
+              >
+                <Pencil />
+              </Button>
+              <DeleteBlogButton id={blog.id} title={blog.title} />
+            </div>
           )}
         </div>
         <p className="text-xs text-muted-foreground">

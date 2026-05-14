@@ -13,10 +13,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
+type FromPageType = 'list' | 'detail';
+
 export default async function EditBlogPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: FromPageType }>;
 }) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
@@ -35,15 +39,20 @@ export default async function EditBlogPage({
     redirect(`/blog/${numericId}`);
   }
 
+  const { from } = await searchParams;
+  const backToList = from === 'list';
+  const backHref = backToList ? '/top' : `/blog/${numericId}`;
+  const backLabel = backToList ? '一覧に戻る' : '詳細に戻る';
+
   const action = updateBlog.bind(null, numericId);
 
   return (
     <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-10">
       <Link
-        href={`/blog/${numericId}`}
+        href={backHref}
         className="w-fit text-sm text-muted-foreground hover:underline"
       >
-        ← 詳細に戻る
+        ← {backLabel}
       </Link>
       <Card size="sm">
         <CardHeader className="border-b pb-3">

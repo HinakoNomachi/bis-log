@@ -7,19 +7,39 @@ import {
   getInputProps,
   getTextareaProps,
 } from '@conform-to/react';
+import type { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
-import { createBlog } from '@/actions/blog';
 import { blogFormSchema } from '@/actions/blog-schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-export function BlogForm() {
-  const [lastResult, action, isPending] = useActionState(createBlog, undefined);
+type BlogFormAction = (
+  prev: SubmissionResult<string[]> | undefined,
+  formData: FormData
+) => Promise<SubmissionResult<string[]>>;
+
+type BlogFormProps = {
+  action: BlogFormAction;
+  defaultValue?: { title: string; body: string };
+  submitLabel?: string;
+  pendingLabel?: string;
+};
+
+export function BlogForm({
+  action: serverAction,
+  defaultValue = { title: '', body: '' },
+  submitLabel = '登録',
+  pendingLabel = '送信中…',
+}: BlogFormProps) {
+  const [lastResult, action, isPending] = useActionState(
+    serverAction,
+    undefined
+  );
   const [form, fields] = useForm({
     lastResult,
-    defaultValue: { title: '', body: '' },
+    defaultValue,
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: blogFormSchema });
     },
@@ -57,7 +77,7 @@ export function BlogForm() {
         ))}
       </div>
       <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? '送信中…' : '登録'}
+        {isPending ? pendingLabel : submitLabel}
       </Button>
     </form>
   );

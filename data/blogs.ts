@@ -23,6 +23,7 @@ export async function getBlogById(id: number) {
       id: blogsTable.id,
       title: blogsTable.title,
       body: blogsTable.body,
+      userId: blogsTable.userId,
       createdAt: blogsTable.createdAt,
       authorName: user.name,
     })

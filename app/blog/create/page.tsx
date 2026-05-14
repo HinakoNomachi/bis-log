@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { BlogForm } from './blog-form';
+import { createBlog } from '@/actions/blog';
+import { BlogForm } from '../blog-form';
 import {
   Card,
   CardContent,
@@ -31,7 +32,7 @@ export default async function CreateBlogPage() {
           <CardDescription>ブログを投稿します</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <BlogForm />
+          <BlogForm action={createBlog} />
         </CardContent>
       </Card>
     </main>

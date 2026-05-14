@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { auth } from '@/auth';
 import { getBlogById } from '@/data/blogs';
+import { Button } from '@/components/ui/button';
 
 export default async function BlogDetailPage({
   params,
@@ -34,7 +35,21 @@ export default async function BlogDetailPage({
         ← 一覧に戻る
       </Link>
       <header className="flex flex-col gap-2 border-b pb-4">
-        <h1 className="text-2xl font-semibold text-foreground">{blog.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-foreground">
+            {blog.title}
+          </h1>
+          {blog.userId === session.user.id && (
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href={`/blog/${blog.id}/edit`} />}
+            >
+              編集
+            </Button>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           {blog.authorName ?? '不明'} ・{' '}
           {blog.createdAt.toLocaleDateString('ja-JP')}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { Trash2 } from 'lucide-react';
 import { deleteBlog } from '@/actions/blog';
@@ -13,15 +13,24 @@ type DeleteBlogButtonProps = {
 
 export function DeleteBlogButton({ id, title }: DeleteBlogButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = () => {
+    setError(null);
     startTransition(async () => {
-      await deleteBlog(id);
+      const result = await deleteBlog(id);
+      if (result?.error) {
+        setError(result.error);
+      }
     });
   };
 
   return (
-    <AlertDialog.Root>
+    <AlertDialog.Root
+      onOpenChange={open => {
+        if (!open) setError(null);
+      }}
+    >
       <AlertDialog.Trigger
         render={
           <Button
@@ -44,6 +53,11 @@ export function DeleteBlogButton({ id, title }: DeleteBlogButtonProps) {
               「{title}」を削除します。この操作は取り消せません。
             </AlertDialog.Description>
           </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <AlertDialog.Close
               render={

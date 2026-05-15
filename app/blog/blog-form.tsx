@@ -53,11 +53,15 @@ export function BlogForm({
       action={action}
       className="flex max-w-md flex-col gap-3"
     >
-      {form.errors?.map(e => (
-        <p key={e} className="text-sm text-destructive">
-          {e}
-        </p>
-      ))}
+      {form.errors && form.errors.length > 0 && (
+        <div role="alert">
+          {form.errors.map(e => (
+            <p key={e} className="text-sm text-destructive">
+              {e}
+            </p>
+          ))}
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor={fields.title.id}>タイトル</Label>
         <Input {...getInputProps(fields.title, { type: 'text' })} />

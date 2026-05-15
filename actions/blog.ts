@@ -79,10 +79,14 @@ export async function updateBlog(
   redirect(`/blog/${id}`);
 }
 
-export async function deleteBlog(id: number): Promise<void> {
+export type DeleteBlogError = { error: string };
+
+export async function deleteBlog(
+  id: number
+): Promise<DeleteBlogError | void> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
-    throw new Error('ログインが必要です');
+    return { error: 'ログインが必要です' };
   }
   try {
     const result = await db
@@ -92,11 +96,11 @@ export async function deleteBlog(id: number): Promise<void> {
       )
       .returning({ id: blogsTable.id });
     if (result.length === 0) {
-      throw new Error('削除権限がないか、対象が見つかりませんでした');
+      return { error: '削除権限がないか、対象が見つかりませんでした' };
     }
   } catch (error) {
     console.error('deleteBlog failed:', error);
-    throw error;
+    return { error: '削除に失敗しました。時間をおいて再度お試しください' };
   }
   revalidatePath('/top');
   redirect('/top');

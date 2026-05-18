@@ -1,12 +1,7 @@
 import Link from 'next/link';
-import { headers } from 'next/headers';
-import { auth } from '@/auth';
 import { LogoutButton } from '@/app/top/logout-button';
 
 export async function SiteHeader() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const isLoggedIn = !!session?.user;
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="mx-auto flex h-14 max-w-[1280px] items-center px-4">

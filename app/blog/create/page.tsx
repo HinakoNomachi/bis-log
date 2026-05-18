@@ -3,14 +3,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { createBlog } from '@/actions/blog';
+import { SiteHeader } from '@/components/site-header';
 import { BlogForm } from '../blog-form';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 export default async function CreateBlogPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -19,22 +13,17 @@ export default async function CreateBlogPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-10">
-      <Link
-        href="/top"
-        className="w-fit text-sm text-muted-foreground hover:underline"
-      >
-        ← 一覧に戻る
-      </Link>
-      <Card size="sm">
-        <CardHeader className="border-b pb-3">
-          <CardTitle>新規登録</CardTitle>
-          <CardDescription>ブログを投稿します</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <BlogForm action={createBlog} />
-        </CardContent>
-      </Card>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-[1280px] px-4 py-4">
+        <Link
+          href="/top"
+          className="mb-3 inline-block text-sm text-muted-foreground hover:underline"
+        >
+          ← 一覧に戻る
+        </Link>
+        <BlogForm action={createBlog} submitLabel="投稿する" pendingLabel="投稿中…" />
+      </main>
+    </>
   );
 }

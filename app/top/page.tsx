@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { BlogTitleList } from './blog-title-list';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BlogForm } from './blog-form';
+import { buttonVariants } from '@/components/ui/button';
 import { LogoutButton } from './logout-button';
 
 function BlogListSkeleton() {
@@ -30,17 +30,13 @@ export default function TopPage() {
     <main className="mx-auto flex max-w-lg flex-col gap-8 px-4 py-10">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-foreground">ブログ</h1>
-        <LogoutButton />
+        <div className="flex items-center gap-2">
+          <Link href="/blog/create" className={buttonVariants()}>
+            新規登録
+          </Link>
+          <LogoutButton />
+        </div>
       </header>
-      <Card size="sm">
-        <CardHeader className="border-b pb-3">
-          <CardTitle>新規登録</CardTitle>
-          <CardDescription>ブログのタイトルを登録します</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <BlogForm />
-        </CardContent>
-      </Card>
       <Card size="sm">
         <CardHeader className="border-b pb-3">
           <CardTitle>一覧</CardTitle>

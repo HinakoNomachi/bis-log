@@ -14,25 +14,32 @@ export async function BlogTitleList() {
   const currentUserId = session?.user?.id;
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">まだブログがありません</p>
+      <div className="rounded-lg border border-border bg-background p-8 text-center text-sm text-muted-foreground">
+        まだブログがありません
+      </div>
     );
   }
   return (
-    <ul className="flex flex-col gap-3 text-sm">
+    <ul className="flex flex-col gap-3">
       {rows.map(row => (
-        <li key={row.id}>
-          <div className="flex items-center justify-between gap-2">
+        <li
+          key={row.id}
+          className="rounded-lg border border-border bg-background px-5 py-4 transition-shadow hover:shadow-sm"
+        >
+          <div className="flex items-start justify-between gap-3">
             <Link
               href={`/blog/${row.id}`}
-              className="group flex flex-1 flex-col gap-0.5"
+              className="group flex flex-1 flex-col gap-1.5"
             >
-              <span className="font-medium text-foreground group-hover:underline">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  @{row.authorName ?? '不明'}
+                </span>
+                <span>が{row.createdAt.toLocaleDateString('ja-JP')}に投稿</span>
+              </div>
+              <h2 className="text-base font-bold text-foreground group-hover:underline">
                 {row.title}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {row.authorName ?? '不明'} ・{' '}
-                {row.createdAt.toLocaleDateString('ja-JP')}
-              </span>
+              </h2>
             </Link>
             {row.userId === currentUserId && (
               <div className="flex shrink-0 items-center gap-1">

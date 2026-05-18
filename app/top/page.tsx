@@ -1,52 +1,32 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { BlogTitleList } from './blog-title-list';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { buttonVariants } from '@/components/ui/button';
-import { LogoutButton } from './logout-button';
+import { SiteHeader } from '@/components/site-header';
 
 function BlogListSkeleton() {
   return (
     <div
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-3"
       aria-busy="true"
       aria-label="読み込み中"
     >
-      <Skeleton className="h-4 w-3/5 max-w-[14rem]" />
-      <Skeleton className="h-4 w-4/5 max-w-[18rem]" />
-      <Skeleton className="h-4 w-2/5 max-w-[10rem]" />
+      <Skeleton className="h-24 w-full rounded-lg" />
+      <Skeleton className="h-24 w-full rounded-lg" />
+      <Skeleton className="h-24 w-full rounded-lg" />
     </div>
   );
 }
 
 export default function TopPage() {
   return (
-    <main className="mx-auto flex max-w-lg flex-col gap-8 px-4 py-10">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-foreground">ブログ</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/blog/create" className={buttonVariants()}>
-            新規登録
-          </Link>
-          <LogoutButton />
-        </div>
-      </header>
-      <Card size="sm">
-        <CardHeader className="border-b pb-3">
-          <CardTitle>一覧</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <Suspense fallback={<BlogListSkeleton />}>
-            <BlogTitleList />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-4 py-8">
+        <h1 className="mb-5 text-xl font-bold text-foreground">記事一覧</h1>
+        <Suspense fallback={<BlogListSkeleton />}>
+          <BlogTitleList />
+        </Suspense>
+      </main>
+    </>
   );
 }

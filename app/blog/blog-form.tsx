@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import {
   useForm,
   getFormProps,
@@ -9,11 +9,9 @@ import {
 } from '@conform-to/react';
 import type { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { blogFormSchema } from '@/actions/blog-schema';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 
 type BlogFormAction = (
   prev: SubmissionResult<string[]> | undefined,
@@ -30,7 +28,7 @@ type BlogFormProps = {
 export function BlogForm({
   action: serverAction,
   defaultValue = { title: '', body: '' },
-  submitLabel = '登録',
+  submitLabel = '投稿する',
   pendingLabel = '送信中…',
 }: BlogFormProps) {
   const [lastResult, action, isPending] = useActionState(
@@ -47,14 +45,15 @@ export function BlogForm({
     shouldRevalidate: 'onInput',
   });
 
+  const [body, setBody] = useState(defaultValue.body);
+
   return (
-    <form
-      {...getFormProps(form)}
-      action={action}
-      className="flex max-w-md flex-col gap-3"
-    >
+    <form {...getFormProps(form)} action={action} className="flex flex-col gap-4">
       {form.errors && form.errors.length > 0 && (
-        <div role="alert">
+        <div
+          role="alert"
+          className="rounded-lg border border-border bg-destructive/10 px-4 py-2"
+        >
           {form.errors.map(e => (
             <p key={e} className="text-sm text-destructive">
               {e}
@@ -62,27 +61,66 @@ export function BlogForm({
           ))}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={fields.title.id}>タイトル</Label>
-        <Input {...getInputProps(fields.title, { type: 'text' })} />
+
+      <div className="rounded-lg border border-border bg-background px-4 py-3 sm:px-6">
+        <input
+          {...getInputProps(fields.title, { type: 'text' })}
+          placeholder="タイトル"
+          className="w-full bg-transparent text-2xl font-bold outline-none placeholder:text-muted-foreground/60 sm:text-3xl"
+        />
         {fields.title.errors?.map(e => (
-          <p key={e} className="text-sm text-destructive">
+          <p key={e} className="mt-1 text-sm text-destructive">
             {e}
           </p>
         ))}
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={fields.body.id}>本文</Label>
-        <Textarea {...getTextareaProps(fields.body)} rows={6} />
-        {fields.body.errors?.map(e => (
-          <p key={e} className="text-sm text-destructive">
-            {e}
-          </p>
-        ))}
+
+      <div className="grid flex-1 grid-cols-1 overflow-hidden rounded-lg border border-border md:grid-cols-2">
+        <div className="border-b border-border md:border-r md:border-b-0">
+          <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
+            本文
+          </div>
+          <textarea
+            {...getTextareaProps(fields.body)}
+            onInput={e => setBody((e.target as HTMLTextAreaElement).value)}
+            placeholder="プログラミング知識をMarkdown記法で書いて共有しよう"
+            className="block min-h-[60vh] w-full resize-none bg-background px-4 py-4 font-mono text-sm outline-none placeholder:text-muted-foreground/60"
+          />
+          {fields.body.errors?.map(e => (
+            <p key={e} className="px-4 pb-2 text-sm text-destructive">
+              {e}
+            </p>
+          ))}
+        </div>
+
+        <div>
+          <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
+            プレビュー
+          </div>
+          <div className="min-h-[60vh] bg-background px-4 py-4">
+            {body.trim().length === 0 ? (
+              <p className="text-sm text-muted-foreground/60">
+                ここにプレビューが表示されます
+              </p>
+            ) : (
+              <article className="prose prose-neutral dark:prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+              </article>
+            )}
+          </div>
+        </div>
       </div>
-      <Button type="submit" disabled={isPending} className="w-fit">
-        {isPending ? pendingLabel : submitLabel}
-      </Button>
+
+      <div className="sticky bottom-0 flex justify-end">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex h-10 items-center rounded-md px-6 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: 'var(--qiita-green)' }}
+        >
+          {isPending ? pendingLabel : submitLabel}
+        </button>
+      </div>
     </form>
   );
 }

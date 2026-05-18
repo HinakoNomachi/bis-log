@@ -4,14 +4,8 @@ import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { updateBlog } from '@/actions/blog';
 import { getBlogById } from '@/data/blogs';
+import { SiteHeader } from '@/components/site-header';
 import { BlogForm } from '../../blog-form';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 type FromPageType = 'list' | 'detail';
 
@@ -47,27 +41,22 @@ export default async function EditBlogPage({
   const action = updateBlog.bind(null, numericId);
 
   return (
-    <main className="mx-auto flex max-w-lg flex-col gap-6 px-4 py-10">
-      <Link
-        href={backHref}
-        className="w-fit text-sm text-muted-foreground hover:underline"
-      >
-        ← {backLabel}
-      </Link>
-      <Card size="sm">
-        <CardHeader className="border-b pb-3">
-          <CardTitle>編集</CardTitle>
-          <CardDescription>ブログを更新します</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <BlogForm
-            action={action}
-            defaultValue={{ title: blog.title, body: blog.body }}
-            submitLabel="更新"
-            pendingLabel="更新中…"
-          />
-        </CardContent>
-      </Card>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-[1280px] px-4 py-4">
+        <Link
+          href={backHref}
+          className="mb-3 inline-block text-sm text-muted-foreground hover:underline"
+        >
+          ← {backLabel}
+        </Link>
+        <BlogForm
+          action={action}
+          defaultValue={{ title: blog.title, body: blog.body }}
+          submitLabel="更新する"
+          pendingLabel="更新中…"
+        />
+      </main>
+    </>
   );
 }

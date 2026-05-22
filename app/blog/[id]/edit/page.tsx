@@ -52,7 +52,7 @@ export default async function EditBlogPage({
         </Link>
         <BlogForm
           action={action}
-          defaultValue={{ title: blog.title, body: blog.body }}
+          defaultValue={{ title: blog.title, body: blog.body, tags: blog.tags }}
           submitLabel="更新する"
           pendingLabel="更新中…"
         />

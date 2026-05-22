@@ -5,11 +5,27 @@ import { parseWithZod } from '@conform-to/zod/v4';
 import type { SubmissionResult } from '@conform-to/react';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { db } from '@/db';
-import { blogsTable } from '@/db/schema';
+import { blogTagsTable, blogsTable, tagsTable } from '@/db/schema';
 import { blogFormSchema } from './blog-schema';
+
+async function syncBlogTags(blogId: number, tagNames: string[]) {
+  await db.delete(blogTagsTable).where(eq(blogTagsTable.blogId, blogId));
+  if (tagNames.length === 0) return;
+  await db
+    .insert(tagsTable)
+    .values(tagNames.map(name => ({ name })))
+    .onConflictDoNothing({ target: tagsTable.name });
+  const tagRows = await db
+    .select({ id: tagsTable.id })
+    .from(tagsTable)
+    .where(inArray(tagsTable.name, tagNames));
+  await db
+    .insert(blogTagsTable)
+    .values(tagRows.map(t => ({ blogId, tagId: t.id })));
+}
 
 export async function createBlog(
   _prev: SubmissionResult<string[]> | undefined,
@@ -19,16 +35,22 @@ export async function createBlog(
   if (submission.status !== 'success') {
     return submission.reply();
   }
+  let createdId: number | undefined;
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) {
       return submission.reply({ formErrors: ['ログインが必要です'] });
     }
-    await db.insert(blogsTable).values({
-      title: submission.value.title,
-      body: submission.value.body,
-      userId: session.user.id,
-    });
+    const [inserted] = await db
+      .insert(blogsTable)
+      .values({
+        title: submission.value.title,
+        body: submission.value.body,
+        userId: session.user.id,
+      })
+      .returning({ id: blogsTable.id });
+    createdId = inserted.id;
+    await syncBlogTags(createdId, submission.value.tags);
   } catch (error) {
     console.error('createBlog failed:', error);
     return submission.reply({
@@ -36,6 +58,9 @@ export async function createBlog(
     });
   }
   revalidatePath('/top');
+  if (createdId !== undefined) {
+    revalidatePath(`/blog/${createdId}`);
+  }
   redirect('/top');
 }
 
@@ -68,6 +93,7 @@ export async function updateBlog(
         formErrors: ['更新権限がないか、対象が見つかりませんでした'],
       });
     }
+    await syncBlogTags(id, submission.value.tags);
   } catch (error) {
     console.error('updateBlog failed:', error);
     return submission.reply({

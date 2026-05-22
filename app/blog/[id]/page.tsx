@@ -66,6 +66,18 @@ export default async function BlogDetailPage({
               </span>
               <span>が{blog.createdAt.toLocaleDateString('ja-JP')}に投稿</span>
             </div>
+            {blog.tags.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5">
+                {blog.tags.map(tag => (
+                  <li
+                    key={tag}
+                    className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
+                  >
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            )}
           </header>
           <div className="prose prose-neutral dark:prose-invert max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{blog.body}</ReactMarkdown>

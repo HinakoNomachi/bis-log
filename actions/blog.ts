@@ -11,18 +11,20 @@ import { db } from '@/db';
 import { blogTagsTable, blogsTable, tagsTable } from '@/db/schema';
 import { blogFormSchema } from './blog-schema';
 
-async function syncBlogTags(blogId: number, tagNames: string[]) {
-  await db.delete(blogTagsTable).where(eq(blogTagsTable.blogId, blogId));
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function syncBlogTags(tx: Tx, blogId: number, tagNames: string[]) {
+  await tx.delete(blogTagsTable).where(eq(blogTagsTable.blogId, blogId));
   if (tagNames.length === 0) return;
-  await db
+  await tx
     .insert(tagsTable)
     .values(tagNames.map(name => ({ name })))
     .onConflictDoNothing({ target: tagsTable.name });
-  const tagRows = await db
+  const tagRows = await tx
     .select({ id: tagsTable.id })
     .from(tagsTable)
     .where(inArray(tagsTable.name, tagNames));
-  await db
+  await tx
     .insert(blogTagsTable)
     .values(tagRows.map(t => ({ blogId, tagId: t.id })));
 }
@@ -41,16 +43,18 @@ export async function createBlog(
     if (!session?.user) {
       return submission.reply({ formErrors: ['ログインが必要です'] });
     }
-    const [inserted] = await db
-      .insert(blogsTable)
-      .values({
-        title: submission.value.title,
-        body: submission.value.body,
-        userId: session.user.id,
-      })
-      .returning({ id: blogsTable.id });
-    createdId = inserted.id;
-    await syncBlogTags(createdId, submission.value.tags);
+    createdId = await db.transaction(async tx => {
+      const [inserted] = await tx
+        .insert(blogsTable)
+        .values({
+          title: submission.value.title,
+          body: submission.value.body,
+          userId: session.user.id,
+        })
+        .returning({ id: blogsTable.id });
+      await syncBlogTags(tx, inserted.id, submission.value.tags);
+      return inserted.id;
+    });
   } catch (error) {
     console.error('createBlog failed:', error);
     return submission.reply({
@@ -78,22 +82,26 @@ export async function updateBlog(
     if (!session?.user) {
       return submission.reply({ formErrors: ['ログインが必要です'] });
     }
-    const result = await db
-      .update(blogsTable)
-      .set({
-        title: submission.value.title,
-        body: submission.value.body,
-      })
-      .where(
-        and(eq(blogsTable.id, id), eq(blogsTable.userId, session.user.id))
-      )
-      .returning({ id: blogsTable.id });
-    if (result.length === 0) {
+    const updated = await db.transaction(async tx => {
+      const result = await tx
+        .update(blogsTable)
+        .set({
+          title: submission.value.title,
+          body: submission.value.body,
+        })
+        .where(
+          and(eq(blogsTable.id, id), eq(blogsTable.userId, session.user.id))
+        )
+        .returning({ id: blogsTable.id });
+      if (result.length === 0) return false;
+      await syncBlogTags(tx, id, submission.value.tags);
+      return true;
+    });
+    if (!updated) {
       return submission.reply({
         formErrors: ['更新権限がないか、対象が見つかりませんでした'],
       });
     }
-    await syncBlogTags(id, submission.value.tags);
   } catch (error) {
     console.error('updateBlog failed:', error);
     return submission.reply({

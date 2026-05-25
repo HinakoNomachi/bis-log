@@ -1,11 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
-import {
-  useForm,
-  getFormProps,
-  getTextareaProps,
-} from '@conform-to/react';
+import { useForm, getFormProps, getTextareaProps } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { Pencil } from 'lucide-react';
 import { commentFormSchema } from '@/actions/comment-schema';
@@ -13,18 +9,10 @@ import { updateComment } from '@/actions/comment';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteCommentButton } from './delete-comment-button';
-
-export type Comment = {
-  id: number;
-  body: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  authorName: string | null;
-};
+import type { CommentPublic } from './comment-list';
 
 type CommentItemProps = {
-  comment: Comment;
+  comment: CommentPublic;
   blogId: number;
   isAuthor: boolean;
 };
@@ -74,7 +62,7 @@ export function CommentItem({ comment, blogId, isAuthor }: CommentItemProps) {
 }
 
 type EditFormProps = {
-  comment: Comment;
+  comment: CommentPublic;
   blogId: number;
   onDone: () => void;
 };

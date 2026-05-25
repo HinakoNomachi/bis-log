@@ -27,6 +27,29 @@ export const blogsTable = pgTable(
   table => [index('blogs_userId_idx').on(table.userId)]
 );
 
+export const comments = pgTable(
+  'comments',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    body: text('body').notNull(),
+    blogId: integer('blog_id')
+      .notNull()
+      .references(() => blogsTable.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  table => [
+    index('comments_blogId_idx').on(table.blogId),
+    index('comments_userId_idx').on(table.userId),
+  ]
+);
+
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -103,11 +126,24 @@ export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   blogs: many(blogsTable),
+  comments: many(comments),
 }));
 
-export const blogsRelations = relations(blogsTable, ({ one }) => ({
+export const blogsRelations = relations(blogsTable, ({ one, many }) => ({
   author: one(user, {
     fields: [blogsTable.userId],
+    references: [user.id],
+  }),
+  comments: many(comments),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  blog: one(blogsTable, {
+    fields: [comments.blogId],
+    references: [blogsTable.id],
+  }),
+  author: one(user, {
+    fields: [comments.userId],
     references: [user.id],
   }),
 }));

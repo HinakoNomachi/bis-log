@@ -15,6 +15,13 @@
       "when": 1778231429764,
       "tag": "0001_fuzzy_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779642705829,
+      "tag": "0002_short_luckman",
+      "breakpoints": true
     }
   ]
 }

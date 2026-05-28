@@ -3,6 +3,7 @@ import {
   index,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   varchar,
@@ -122,6 +123,28 @@ export const verification = pgTable(
   table => [index('verification_identifier_idx').on(table.identifier)]
 );
 
+export const tagsTable = pgTable('tags', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 50 }).notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const blogTagsTable = pgTable(
+  'blog_tags',
+  {
+    blogId: integer('blog_id')
+      .notNull()
+      .references(() => blogsTable.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tagsTable.id, { onDelete: 'cascade' }),
+  },
+  table => [
+    primaryKey({ columns: [table.blogId, table.tagId] }),
+    index('blog_tags_tagId_idx').on(table.tagId),
+  ]
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -134,6 +157,7 @@ export const blogsRelations = relations(blogsTable, ({ one, many }) => ({
     fields: [blogsTable.userId],
     references: [user.id],
   }),
+  blogTags: many(blogTagsTable),
   comments: many(comments),
 }));
 
@@ -145,6 +169,21 @@ export const commentsRelations = relations(comments, ({ one }) => ({
   author: one(user, {
     fields: [comments.userId],
     references: [user.id],
+  }),
+}));
+
+export const tagsRelations = relations(tagsTable, ({ many }) => ({
+  blogTags: many(blogTagsTable),
+}));
+
+export const blogTagsRelations = relations(blogTagsTable, ({ one }) => ({
+  blog: one(blogsTable, {
+    fields: [blogTagsTable.blogId],
+    references: [blogsTable.id],
+  }),
+  tag: one(tagsTable, {
+    fields: [blogTagsTable.tagId],
+    references: [tagsTable.id],
   }),
 }));
 

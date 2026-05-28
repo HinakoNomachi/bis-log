@@ -40,6 +40,18 @@ export async function BlogTitleList() {
               <h2 className="text-base font-bold text-foreground group-hover:underline">
                 {row.title}
               </h2>
+              {row.tags.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5">
+                  {row.tags.map(tag => (
+                    <li
+                      key={tag}
+                      className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Link>
             {row.userId === currentUserId && (
               <div className="flex shrink-0 items-center gap-1">

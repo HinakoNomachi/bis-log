@@ -12,6 +12,7 @@ import { parseWithZod } from '@conform-to/zod/v4';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { blogFormSchema } from '@/actions/blog-schema';
+import { TagInput } from './tag-input';
 
 type BlogFormAction = (
   prev: SubmissionResult<string[]> | undefined,
@@ -20,14 +21,14 @@ type BlogFormAction = (
 
 type BlogFormProps = {
   action: BlogFormAction;
-  defaultValue?: { title: string; body: string };
+  defaultValue?: { title: string; body: string; tags?: string[] };
   submitLabel?: string;
   pendingLabel?: string;
 };
 
 export function BlogForm({
   action: serverAction,
-  defaultValue = { title: '', body: '' },
+  defaultValue = { title: '', body: '', tags: [] },
   submitLabel = '投稿する',
   pendingLabel = '送信中…',
 }: BlogFormProps) {
@@ -37,7 +38,11 @@ export function BlogForm({
   );
   const [form, fields] = useForm({
     lastResult,
-    defaultValue,
+    defaultValue: {
+      title: defaultValue.title,
+      body: defaultValue.body,
+      tags: (defaultValue.tags ?? []).join(','),
+    },
     onValidate({ formData }) {
       return parseWithZod(formData, { schema: blogFormSchema });
     },
@@ -62,17 +67,24 @@ export function BlogForm({
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-background px-4 py-3 sm:px-6">
-        <input
-          {...getInputProps(fields.title, { type: 'text' })}
-          placeholder="タイトル"
-          className="w-full bg-transparent text-2xl font-bold outline-none placeholder:text-muted-foreground/60 sm:text-3xl"
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-background px-4 py-3 sm:px-6">
+        <div>
+          <input
+            {...getInputProps(fields.title, { type: 'text' })}
+            placeholder="タイトル"
+            className="w-full bg-transparent text-2xl font-bold outline-none placeholder:text-muted-foreground/60 sm:text-3xl"
+          />
+          {fields.title.errors?.map(e => (
+            <p key={e} className="mt-1 text-sm text-destructive">
+              {e}
+            </p>
+          ))}
+        </div>
+        <TagInput
+          name={fields.tags.name}
+          defaultValue={defaultValue.tags ?? []}
+          errors={fields.tags.errors}
         />
-        {fields.title.errors?.map(e => (
-          <p key={e} className="mt-1 text-sm text-destructive">
-            {e}
-          </p>
-        ))}
       </div>
 
       <div className="grid flex-1 grid-cols-1 overflow-hidden rounded-lg border border-border md:grid-cols-2">

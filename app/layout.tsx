@@ -1,4 +1,5 @@
 import './globals.css';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 export default function RootLayout({
   children,
@@ -11,7 +12,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col"
         style={{ backgroundColor: 'var(--qiita-bg)' }}
       >
-        {children}
+        <NuqsAdapter>{children}</NuqsAdapter>
       </body>
     </html>
   );

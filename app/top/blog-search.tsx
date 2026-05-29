@@ -24,7 +24,6 @@ export function BlogSearch({ allTags }: BlogSearchProps) {
   const [tags, setTags] = useQueryState('tags', tagsParser);
 
   const [draftQ, setDraftQ] = useState(q);
-  const [draftTags, setDraftTags] = useState<string[]>(tags);
 
   const chipContainerRef = useRef<HTMLUListElement>(null);
   const [overflows, setOverflows] = useState(false);
@@ -41,16 +40,16 @@ export function BlogSearch({ allTags }: BlogSearchProps) {
   }, [allTags]);
 
   const toggleTag = (tag: string) => {
-    setDraftTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+    const next = tags.includes(tag)
+      ? tags.filter(t => t !== tag)
+      : [...tags, tag];
+    setTags(next.length > 0 ? next : null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = draftQ.trim();
     setQ(trimmed.length > 0 ? trimmed : null);
-    setTags(draftTags.length > 0 ? draftTags : null);
   };
 
   return (
@@ -93,7 +92,7 @@ export function BlogSearch({ allTags }: BlogSearchProps) {
             )}
           >
             {allTags.map(tag => {
-              const selected = draftTags.includes(tag);
+              const selected = tags.includes(tag);
               return (
                 <li key={tag}>
                   <button

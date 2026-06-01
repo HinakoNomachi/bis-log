@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState, type ChangeEvent } from 'react';
 import {
   useForm,
   getFormProps,
@@ -12,6 +12,7 @@ import { parseWithZod } from '@conform-to/zod/v4';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { blogFormSchema } from '@/actions/blog-schema';
+import { uploadBlogImage } from '@/actions/upload-image';
 import { TagInput } from './tag-input';
 
 type BlogFormAction = (
@@ -51,6 +52,44 @@ export function BlogForm({
   });
 
   const [body, setBody] = useState(defaultValue.body);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const current = textarea.value;
+    const next = current.slice(0, start) + text + current.slice(end);
+    textarea.value = next;
+    setBody(next);
+    textarea.focus();
+    const newPos = start + text.length;
+    textarea.setSelectionRange(newPos, newPos);
+  };
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await uploadBlogImage(formData);
+      if (!result.ok) {
+        setUploadError(result.error);
+        return;
+      }
+      insertAtCursor(result.markdown);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <form {...getFormProps(form)} action={action} className="flex flex-col gap-4">
@@ -89,11 +128,32 @@ export function BlogForm({
 
       <div className="grid flex-1 grid-cols-1 overflow-hidden rounded-lg border border-border md:grid-cols-2">
         <div className="border-b border-border md:border-r md:border-b-0">
-          <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
-            本文
+          <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
+            <span>本文</span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="inline-flex items-center rounded-md border border-border bg-background px-2 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isUploading ? 'アップロード中…' : '画像を挿入'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
+          {uploadError && (
+            <p role="alert" className="px-4 py-2 text-sm text-destructive">
+              {uploadError}
+            </p>
+          )}
           <textarea
             {...getTextareaProps(fields.body)}
+            ref={textareaRef}
             onInput={e => setBody((e.target as HTMLTextAreaElement).value)}
             placeholder="プログラミング知識をMarkdown記法で書いて共有しよう"
             className="block min-h-[60vh] w-full resize-none bg-background px-4 py-4 font-mono text-sm outline-none placeholder:text-muted-foreground/60"

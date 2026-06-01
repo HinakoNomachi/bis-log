@@ -10,6 +10,7 @@
 | FN-BLOG-02 | ブログ詳細表示 | 指定IDの記事をMarkdownレンダリングで表示する | SCR-BLOG-02 | （`getBlogById`：データ取得） | [04_feature-design-detail-blog.md](04_feature-design-detail-blog.md) |
 | FN-BLOG-03 | ブログ編集 | 自身が投稿した記事のタイトル/本文を更新する | SCR-BLOG-03 | `updateBlog` | [04_feature-design-edit-blog.md](04_feature-design-edit-blog.md) |
 | FN-BLOG-04 | ブログ削除 | 自身が投稿した記事を確認ダイアログ経由で削除する | SCR-BLOG-02（から実行） | `deleteBlog` | [04_feature-design-delete-blog.md](04_feature-design-delete-blog.md) |
+| FN-BLOG-05 | ブログ本文への画像挿入 | 本文Markdown内に画像をアップロードしてカーソル位置に `![](...)` を挿入する。表示時は認証付き画像プロキシ経由で配信 | SCR-BLOG-01, SCR-BLOG-03（から実行） | `uploadBlogImage` / `GET /api/blog-image/[...path]` | [04_feature-design-upload-image.md](04_feature-design-upload-image.md) |
 
 ## 機能カテゴリ別整理
 
@@ -17,6 +18,7 @@
 - FN-BLOG-01 ブログ新規登録
 - FN-BLOG-03 ブログ編集
 - FN-BLOG-04 ブログ削除
+- FN-BLOG-05 ブログ本文への画像挿入
 
 ### 参照系（読み込み）
 - FN-BLOG-02 ブログ詳細表示

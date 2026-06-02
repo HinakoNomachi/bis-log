@@ -82,22 +82,24 @@ export async function listBlogs(params: ListBlogsParams = {}) {
   // No keyword: every row is tier 3 so date alone decides order.
   let tierExpr: SQL<number>;
   if (keywords.length > 0) {
-    const titleConds = sql.join(
-      keywords.map(kw => sql`${blogsTable.title} ILIKE ${`%${escapeLike(kw)}%`}`),
-      sql` OR `
+    const titleMatch = or(
+      ...keywords.map(kw => ilike(blogsTable.title, `%${escapeLike(kw)}%`))
     );
-    const tagConds = sql.join(
-      keywords.map(kw => sql`${tagsTable.name} ILIKE ${`%${escapeLike(kw)}%`}`),
-      sql` OR `
+    const tagMatch = exists(
+      db
+        .select({ one: sql`1` })
+        .from(blogTagsTable)
+        .innerJoin(tagsTable, eq(blogTagsTable.tagId, tagsTable.id))
+        .where(
+          and(
+            eq(blogTagsTable.blogId, blogsTable.id),
+            or(...keywords.map(kw => ilike(tagsTable.name, `%${escapeLike(kw)}%`)))
+          )
+        )
     );
     tierExpr = sql<number>`CASE
-      WHEN (${titleConds}) THEN 1
-      WHEN EXISTS (
-        SELECT 1 FROM ${blogTagsTable}
-        INNER JOIN ${tagsTable} ON ${blogTagsTable.tagId} = ${tagsTable.id}
-        WHERE ${blogTagsTable.blogId} = ${blogsTable.id}
-          AND (${tagConds})
-      ) THEN 2
+      WHEN ${titleMatch} THEN 1
+      WHEN ${tagMatch} THEN 2
       ELSE 3
     END`;
   } else {

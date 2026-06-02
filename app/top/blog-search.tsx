@@ -2,25 +2,22 @@
 
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
-import {
-  parseAsArrayOf,
-  parseAsString,
-  useQueryState,
-} from 'nuqs';
+import { debounce, parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const qParser = parseAsString.withDefault('').withOptions({ shallow: false });
 const tagsParser = parseAsArrayOf(parseAsString)
   .withDefault([])
-  .withOptions({ shallow: false });
+  .withOptions({ shallow: false, limitUrlUpdates: debounce(250) });
 
 type BlogSearchProps = {
   allTags: string[];
+  q: string;
 };
 
-export function BlogSearch({ allTags }: BlogSearchProps) {
-  const [q, setQ] = useQueryState('q', qParser);
+export function BlogSearch({ allTags, q }: BlogSearchProps) {
+  const [, setQ] = useQueryState('q', qParser);
   const [tags, setTags] = useQueryState('tags', tagsParser);
 
   const [draftQ, setDraftQ] = useState(q);

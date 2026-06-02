@@ -48,7 +48,7 @@ export default async function TopPage({
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl px-4 py-8">
         <h1 className="mb-5 text-xl font-bold text-foreground">記事一覧</h1>
-        <BlogSearch allTags={allTags} />
+        <BlogSearch allTags={allTags} q={q} />
         <Suspense
           key={`${q}|${tags.join(',')}`}
           fallback={<BlogListSkeleton />}

@@ -15,6 +15,7 @@ import {
 import { db } from '@/db';
 import { blogTagsTable, blogsTable, tagsTable, user } from '@/db/schema';
 
+// ILIKE のワイルドカード（%, _）をエスケープ
 function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, ch => `\\${ch}`);
 }
@@ -23,6 +24,7 @@ function likeContains(value: string) {
   return `%${escapeLike(value)}%`;
 }
 
+// q をスペース区切りで分割（UI: キーワード同士は AND）
 function parseKeywords(q?: string): string[] {
   return (q ?? '')
     .split(/\s+/)
@@ -30,20 +32,22 @@ function parseKeywords(q?: string): string[] {
     .filter(s => s.length > 0);
 }
 
+// 検索 UI から渡るタグ名（空文字除去）
 function parseTagNames(tags?: string[]): string[] {
   return (tags ?? []).map(t => t.trim()).filter(t => t.length > 0);
 }
 
-/** キーワードがタイトルまたは本文に含まれる */
+/** WHERE 用: 1キーワードがタイトル or 本文に部分一致 */
 function matchesKeyword(keyword: string): SQL {
   const pattern = likeContains(keyword);
   return or(ilike(blogsTable.title, pattern), ilike(blogsTable.body, pattern))!;
 }
 
-/** 記事が指定タグを持つ */
+/** WHERE 用: 記事が指定タグを1つ以上持つ（EXISTS 相関サブクエリ） */
 function blogHasTag(tagName: string): SQL {
   return exists(
     db
+      // EXISTS では列の中身は不要。行の有無だけ見る
       .select({ one: sql`1` })
       .from(blogTagsTable)
       .innerJoin(tagsTable, eq(blogTagsTable.tagId, tagsTable.id))
@@ -56,6 +60,7 @@ function blogHasTag(tagName: string): SQL {
   );
 }
 
+/** 一覧表示用: 記事 ID ごとのタグ名配列（絞り込みとは別クエリ・N+1 回避） */
 async function tagsByBlogIds(blogIds: number[]) {
   const map = new Map<number, string[]>();
   if (blogIds.length === 0) return map;
@@ -82,11 +87,13 @@ export async function listBlogs(params: ListBlogsParams = {}) {
   const keywords = parseKeywords(params.q);
   const tagNames = parseTagNames(params.tags);
 
+  // キーワード・タグの条件を AND で積む（タグ複数 = すべて持つ記事）
   const conditions: SQL[] = [
     ...keywords.map(matchesKeyword),
     ...tagNames.map(blogHasTag),
   ];
 
+  // 1本目: 記事の絞り込み + 著者名。タグ名は含めない
   const rows = await db
     .select({
       id: blogsTable.id,
@@ -96,10 +103,12 @@ export async function listBlogs(params: ListBlogsParams = {}) {
       authorName: user.name,
     })
     .from(blogsTable)
+    // 著者名取得用。特定ユーザーで絞る条件ではない
     .leftJoin(user, eq(blogsTable.userId, user.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(blogsTable.createdAt));
 
+  // 2本目: 表示用タグを付与（blog-title-list の TagOverflowList 向け）
   const tagsMap = await tagsByBlogIds(rows.map(r => r.id));
   return rows.map(row => ({ ...row, tags: tagsMap.get(row.id) ?? [] }));
 }

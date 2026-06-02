@@ -15,6 +15,47 @@ import {
 import { db } from '@/db';
 import { blogTagsTable, blogsTable, tagsTable, user } from '@/db/schema';
 
+function escapeLike(value: string) {
+  return value.replace(/[\\%_]/g, ch => `\\${ch}`);
+}
+
+function likeContains(value: string) {
+  return `%${escapeLike(value)}%`;
+}
+
+function parseKeywords(q?: string): string[] {
+  return (q ?? '')
+    .split(/\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+}
+
+function parseTagNames(tags?: string[]): string[] {
+  return (tags ?? []).map(t => t.trim()).filter(t => t.length > 0);
+}
+
+/** キーワードがタイトルまたは本文に含まれる */
+function matchesKeyword(keyword: string): SQL {
+  const pattern = likeContains(keyword);
+  return or(ilike(blogsTable.title, pattern), ilike(blogsTable.body, pattern))!;
+}
+
+/** 記事が指定タグを持つ */
+function blogHasTag(tagName: string): SQL {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(blogTagsTable)
+      .innerJoin(tagsTable, eq(blogTagsTable.tagId, tagsTable.id))
+      .where(
+        and(
+          eq(blogTagsTable.blogId, blogsTable.id),
+          eq(tagsTable.name, tagName)
+        )
+      )
+  );
+}
+
 async function tagsByBlogIds(blogIds: number[]) {
   const map = new Map<number, string[]>();
   if (blogIds.length === 0) return map;
@@ -32,77 +73,19 @@ async function tagsByBlogIds(blogIds: number[]) {
   return map;
 }
 
-function escapeLike(value: string) {
-  return value.replace(/[\\%_]/g, ch => `\\${ch}`);
-}
-
 export type ListBlogsParams = {
   q?: string;
   tags?: string[];
 };
 
 export async function listBlogs(params: ListBlogsParams = {}) {
-  const keywords = (params.q ?? '')
-    .split(/\s+/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-  const tagFilter = (params.tags ?? []).filter(t => t.trim().length > 0);
+  const keywords = parseKeywords(params.q);
+  const tagNames = parseTagNames(params.tags);
 
-  const whereParts: SQL[] = [];
-
-  // Each keyword must match title OR body (AND across keywords).
-  for (const kw of keywords) {
-    const pattern = `%${escapeLike(kw)}%`;
-    const cond = or(
-      ilike(blogsTable.title, pattern),
-      ilike(blogsTable.body, pattern)
-    );
-    if (cond) whereParts.push(cond);
-  }
-
-  // Blog must have ALL specified tags (AND across tag filters).
-  for (const tagName of tagFilter) {
-    whereParts.push(
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(blogTagsTable)
-          .innerJoin(tagsTable, eq(blogTagsTable.tagId, tagsTable.id))
-          .where(
-            and(
-              eq(blogTagsTable.blogId, blogsTable.id),
-              eq(tagsTable.name, tagName)
-            )
-          )
-      )
-    );
-  }
-
-  // Tier for ordering: title hit > tag hit > body hit.
-  // No keyword: every row is tier 3 so date alone decides order.
-  let tierExpr: SQL<number>;
-  if (keywords.length > 0) {
-    const titleConds = sql.join(
-      keywords.map(kw => sql`${blogsTable.title} ILIKE ${`%${escapeLike(kw)}%`}`),
-      sql` OR `
-    );
-    const tagConds = sql.join(
-      keywords.map(kw => sql`${tagsTable.name} ILIKE ${`%${escapeLike(kw)}%`}`),
-      sql` OR `
-    );
-    tierExpr = sql<number>`CASE
-      WHEN (${titleConds}) THEN 1
-      WHEN EXISTS (
-        SELECT 1 FROM ${blogTagsTable}
-        INNER JOIN ${tagsTable} ON ${blogTagsTable.tagId} = ${tagsTable.id}
-        WHERE ${blogTagsTable.blogId} = ${blogsTable.id}
-          AND (${tagConds})
-      ) THEN 2
-      ELSE 3
-    END`;
-  } else {
-    tierExpr = sql<number>`3`;
-  }
+  const conditions: SQL[] = [
+    ...keywords.map(matchesKeyword),
+    ...tagNames.map(blogHasTag),
+  ];
 
   const rows = await db
     .select({
@@ -114,8 +97,8 @@ export async function listBlogs(params: ListBlogsParams = {}) {
     })
     .from(blogsTable)
     .leftJoin(user, eq(blogsTable.userId, user.id))
-    .where(whereParts.length > 0 ? and(...whereParts) : undefined)
-    .orderBy(asc(tierExpr), desc(blogsTable.createdAt));
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(blogsTable.createdAt));
 
   const tagsMap = await tagsByBlogIds(rows.map(r => r.id));
   return rows.map(row => ({ ...row, tags: tagsMap.get(row.id) ?? [] }));

@@ -2,15 +2,12 @@
 
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
-import {
-  parseAsArrayOf,
-  parseAsString,
-  useQueryState,
-} from 'nuqs';
+import { debounce, parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-
-const qParser = parseAsString.withDefault('').withOptions({ shallow: false });
+const qParser = parseAsString
+  .withDefault('')
+  .withOptions({ shallow: false, limitUrlUpdates: debounce(250) });
 const tagsParser = parseAsArrayOf(parseAsString)
   .withDefault([])
   .withOptions({ shallow: false });
@@ -22,8 +19,6 @@ type BlogSearchProps = {
 export function BlogSearch({ allTags }: BlogSearchProps) {
   const [q, setQ] = useQueryState('q', qParser);
   const [tags, setTags] = useQueryState('tags', tagsParser);
-
-  const [draftQ, setDraftQ] = useState(q);
 
   const chipContainerRef = useRef<HTMLUListElement>(null);
   const [overflows, setOverflows] = useState(false);
@@ -46,31 +41,22 @@ export function BlogSearch({ allTags }: BlogSearchProps) {
     setTags(next.length > 0 ? next : null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = draftQ.trim();
-    setQ(trimmed.length > 0 ? trimmed : null);
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="mb-10">
+    <form className="mb-10">
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          value={draftQ}
-          onChange={e => setDraftQ(e.target.value)}
+          value={q}
+          onChange={e => setQ(e.target.value)}
           placeholder="タイトル・本文を検索（スペース区切りでAND）"
           className="h-10 pr-9 pl-9 focus-visible:border-[var(--qiita-green)] focus-visible:ring-0"
           aria-label="記事を検索"
         />
-        {draftQ.length > 0 && (
+        {q.length > 0 && (
           <button
             type="button"
-            onClick={() => {
-              setDraftQ('');
-              setQ(null);
-            }}
+            onClick={() => setQ(null)}
             aria-label="入力をクリア"
             className="absolute top-1/2 right-2 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           >

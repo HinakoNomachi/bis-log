@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import { BlogTitleList } from './blog-title-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SiteHeader } from '@/components/site-header';
+import { auth } from '@/auth';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 function BlogListSkeleton() {
   return (
@@ -17,7 +20,11 @@ function BlogListSkeleton() {
   );
 }
 
-export default function TopPage() {
+export default async function TopPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    redirect('/');
+  }
   return (
     <>
       <SiteHeader />

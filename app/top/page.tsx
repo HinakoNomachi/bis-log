@@ -3,6 +3,9 @@ import { BlogTitleList } from './blog-title-list';
 import { BlogSearch } from './blog-search';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SiteHeader } from '@/components/site-header';
+import { auth } from '@/auth';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { listAllTags } from '@/data/blogs';
 
 function BlogListSkeleton() {
@@ -38,6 +41,10 @@ export default async function TopPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    redirect('/');
+  }
   const params = await searchParams;
   const q = parseQ(params.q);
   const tags = parseTags(params.tags);

@@ -6,9 +6,12 @@ import remarkGfm from 'remark-gfm';
 import { Pencil } from 'lucide-react';
 import { auth } from '@/auth';
 import { getBlogById } from '@/data/blogs';
+import { listCommentsByBlogId } from '@/data/comments';
 import { Button } from '@/components/ui/button';
 import { SiteHeader } from '@/components/site-header';
 import { DeleteBlogButton } from '../delete-blog-button';
+import { CommentForm } from './comment-form';
+import { CommentList } from './comment-list';
 
 export default async function BlogDetailPage({
   params,
@@ -24,7 +27,10 @@ export default async function BlogDetailPage({
   if (!Number.isInteger(numericId) || numericId <= 0) {
     notFound();
   }
-  const blog = await getBlogById(numericId);
+  const [blog, comments] = await Promise.all([
+    getBlogById(numericId),
+    listCommentsByBlogId(numericId),
+  ]);
   if (!blog) {
     notFound();
   }
@@ -83,6 +89,18 @@ export default async function BlogDetailPage({
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{blog.body}</ReactMarkdown>
           </div>
         </article>
+
+        <section className="mt-8 flex flex-col gap-4">
+          <h2 className="text-lg font-semibold text-foreground">
+            コメント ({comments.length}件)
+          </h2>
+          <CommentForm blogId={blog.id} />
+          <CommentList
+            comments={comments}
+            blogId={blog.id}
+            currentUserId={session.user.id}
+          />
+        </section>
       </main>
     </>
   );

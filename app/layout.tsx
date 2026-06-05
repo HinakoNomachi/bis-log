@@ -1,5 +1,6 @@
 import { ThemeProvider } from 'next-themes';
 import './globals.css';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 export default function RootLayout({
   children,
@@ -18,7 +19,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <NuqsAdapter>{children}</NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>

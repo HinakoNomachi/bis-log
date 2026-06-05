@@ -92,11 +92,7 @@ export function BlogForm({
   };
 
   return (
-    <form
-      {...getFormProps(form)}
-      action={action}
-      className="flex flex-col gap-4"
-    >
+    <form {...getFormProps(form)} action={action} className="flex flex-col gap-4">
       {form.errors && form.errors.length > 0 && (
         <div
           role="alert"
@@ -180,9 +176,7 @@ export function BlogForm({
               </p>
             ) : (
               <article className="prose prose-neutral dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {body}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
               </article>
             )}
           </div>
@@ -193,8 +187,8 @@ export function BlogForm({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex h-10 items-center rounded-md px-6 text-sm font-semibold text-white shadow-sm transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: 'var(--color-qiita-green)' }}
+          className="inline-flex h-10 items-center rounded-md px-6 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: 'var(--qiita-green)' }}
         >
           {isPending ? pendingLabel : submitLabel}
         </button>

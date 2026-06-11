@@ -41,6 +41,7 @@ export async function uploadBlogImage(
     .upload(path, file, { contentType: file.type });
 
   if (error) {
+    console.log(error, error.message);
     return { ok: false, error: `アップロードに失敗しました: ${error.message}` };
   }
 

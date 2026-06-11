@@ -35,7 +35,8 @@ export async function uploadBlogImage(
     return { ok: false, error: '対応していない画像形式です' };
   }
 
-  const path = `posts/${session.user.id}/${crypto.randomUUID()}.${ext}`;
+  // const path = `posts/${session.user.id}/${crypto.randomUUID()}.${ext}`;
+  const path = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, file, { contentType: file.type });

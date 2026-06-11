@@ -5,7 +5,7 @@
   "packageManager": "npm@10.9.3",
   "scripts": {
     "dev": "next dev",
-    "build": "drizzle-kit generate && next build",
+    "build": "drizzle-kit migrate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:start": "supabase start",

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { LogoutButton } from '@/app/top/logout-button';
+import { ModeToggle } from './mode-toggle';
 
 export async function SiteHeader() {
   return (
@@ -14,6 +15,7 @@ export async function SiteHeader() {
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
+          <ModeToggle />
           <Link
             href="/blog/create"
             className="inline-flex h-9 items-center rounded-md px-4 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
